@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description"
+        content="FundTrucker – Smart financial tracker for businesses. Track income, expenses, budgets and generate reports." />
+    <title>FundTrucker – Business Finance Tracker</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+
+<body>
+
+    <!-- ──────────────── SPLASH ──────────────── -->
+    <div id="splash" class="splash">
+        <div class="splash-content">
+            <div class="splash-logo"><i class="fa-solid fa-chart-line"></i></div>
+            <h1 class="splash-title">FundTrucker</h1>
+            <p class="splash-sub">Smart Business Finance</p>
+            <div class="splash-loader">
+                <div class="loader-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ──────────────── PIN SCREEN ──────────────── -->
+    <div id="pinScreen" class="pin-screen hidden">
+        <div class="pin-wrap">
+            <div class="pin-logo"><i class="fa-solid fa-shield-halved"></i></div>
+            <h2 class="pin-title" id="pinTitle">Enter PIN</h2>
+            <p class="pin-sub" id="pinSub">FundTrucker is locked</p>
+            <div class="pin-dots" id="pinDots">
+                <span class="dot" id="d0"></span><span class="dot" id="d1"></span>
+                <span class="dot" id="d2"></span><span class="dot" id="d3"></span>
+            </div>
+            <div id="pinError" class="pin-error hidden">Incorrect PIN. Try again.</div>
+            <div class="pin-pad">
+                <button class="pin-btn" onclick="pinKey('1')">1</button>
+                <button class="pin-btn" onclick="pinKey('2')">2</button>
+                <button class="pin-btn" onclick="pinKey('3')">3</button>
+                <button class="pin-btn" onclick="pinKey('4')">4</button>
+                <button class="pin-btn" onclick="pinKey('5')">5</button>
+                <button class="pin-btn" onclick="pinKey('6')">6</button>
+                <button class="pin-btn" onclick="pinKey('7')">7</button>
+                <button class="pin-btn" onclick="pinKey('8')">8</button>
+                <button class="pin-btn" onclick="pinKey('9')">9</button>
+                <button class="pin-btn pin-empty"></button>
+                <button class="pin-btn" onclick="pinKey('0')">0</button>
+                <button class="pin-btn pin-del" onclick="pinDel()"><i class="fa-solid fa-delete-left"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ──────────────── MAIN APP ──────────────── -->
+    <div id="app" class="app hidden">
+
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="header-logo"><i class="fa-solid fa-chart-line"></i></div>
+                <div>
+                    <span class="header-title" id="headerBizName">Davma Surprises</span>
+                    <span class="header-date" id="headerDate"></span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" id="notifBtn" title="Alerts">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="badge" id="notifBadge" style="display:none">0</span>
+                </button>
+                <button class="icon-btn" id="lockBtn" title="Lock App">
+                    <i class="fa-solid fa-lock"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Alert Banner -->
+        <div id="alertBanner" class="alert-banner hidden">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="alertMsg"></span>
+            <button onclick="dismissAlert()"><i class="fa-solid fa-times"></i></button>
+        </div>
+
+        <!-- Pages -->
+        <main class="app-main" id="mainContent">
+
+            <!-- ══════════════ DASHBOARD ══════════════ -->
+            <section class="page active" id="page-dashboard">
+                <div class="page-scroll">
+                    <div class="greeting-block">
+                        <p class="greet-sub">Welcome back 👋</p>
+                        <h2 class="greet-main" id="greetBusiness">Davma Surprises</h2>
+                    </div>
+
+                    <!-- Balance Card -->
+                    <div class="balance-card">
+                        <div class="balance-label">Net Balance (This Month)</div>
+                        <div class="balance-amount" id="dashBalance">KES 0.00</div>
+                        <div class="balance-sub">
+                            <span class="b-in"><i class="fa-solid fa-arrow-down"></i> <span
+                                    id="dashIncome">0</span></span>
+                            <div class="b-divider"></div>
+                            <span class="b-out"><i class="fa-solid fa-arrow-up"></i> <span
+                                    id="dashExpenses">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="summary-row">
+                        <div class="sum-card card-green">
+                            <div class="sum-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                            <div class="sum-info">
+                                <span class="sum-label">Revenue</span>
+                                <span class="sum-value" id="dashRevenue">KES 0</span>
+                            </div>
+                        </div>
+                        <div class="sum-card card-blue">
+                            <div class="sum-icon"><i class="fa-solid fa-coins"></i></div>
+                            <div class="sum-info">
+                                <span class="sum-label">Net Profit</span>
+                                <span class="sum-value" id="dashProfit">KES 0</span>
+                            </div>
+                        </div>
+                        <div class="sum-card card-orange">
+                            <div class="sum-icon"><i class="fa-solid fa-percent"></i></div>
+                            <div class="sum-info">
+                                <span class="sum-label">Avg Margin</span>
+                                <span class="sum-value" id="dashMargin">0%</span>
+                            </div>
+                        </div>
+                        <div class="sum-card card-purple">
+                            <div class="sum-icon"><i class="fa-solid fa-receipt"></i></div>
+                            <div class="sum-info">
+                                <span class="sum-label">Transactions</span>
+                                <span class="sum-value" id="dashTxns">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Chart -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3>Revenue Overview</h3>
+                            <div class="period-tabs">
+                                <button class="ptab active" data-period="week">Week</button>
+                                <button class="ptab" data-period="month">Month</button>
+                            </div>
+                        </div>
+                        <canvas id="revenueChart" height="180"></canvas>
+                    </div>
+
+                    <!-- Budget Pulse -->
+                    <div class="card budget-pulse" id="budgetPulse" style="display:none">
+                        <div class="card-header">
+                            <h3>⚡ Budget Pulse</h3><button class="link-btn" onclick="goTo('more')">View All</button>
+                        </div>
+                        <div id="budgetPulseList" style="padding:0 16px 14px"></div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="section-title">Quick Actions</div>
+                    <div class="quick-grid">
+                        <button class="quick-btn" onclick="goTo('income')">
+                            <div class="quick-icon qi-green"><i class="fa-solid fa-cash-register"></i></div>
+                            <span>Log Income</span>
+                        </button>
+                        <button class="quick-btn" onclick="goTo('expenses')">
+                            <div class="quick-icon qi-orange"><i class="fa-solid fa-wallet"></i></div>
+                            <span>Log Expense</span>
+                        </button>
+                        <button class="quick-btn" onclick="openSmartEntry('expense')">
+                            <div class="quick-icon qi-blue"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                            <span>Smart Import</span>
+                        </button>
+                        <button class="quick-btn" onclick="goTo('reports')">
+                            <div class="quick-icon qi-purple"><i class="fa-solid fa-chart-pie"></i></div>
+                            <span>Reports</span>
+                        </button>
+                        <button class="quick-btn" onclick="goTo('more')">
+                            <div class="quick-icon qi-orange"><i class="fa-solid fa-sliders"></i></div>
+                            <span>Budgets</span>
+                        </button>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="section-title">Recent Activity</div>
+                    <div id="recentList" class="txn-list">
+                        <div class="empty-state"><i class="fa-solid fa-inbox"></i>
+                            <p>No activity yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ INCOME PAGE ══════════════ -->
+            <section class="page" id="page-income">
+                <div class="page-scroll">
+                    <div class="page-hero hero-green">
+                        <i class="fa-solid fa-cash-register"></i>
+                        <h2>Income / Sales</h2>
+                        <p>Record revenue from all sources</p>
+                    </div>
+
+                    <div class="form-card card">
+                        <div class="form-group">
+                            <label>Product / Service Name</label>
+                            <input type="text" id="saleName" placeholder="e.g. Wedding Balloon Setup" />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Selling Price (KES)</label>
+                                <input type="number" id="salePrice" placeholder="0.00" min="0" step="0.01" />
+                            </div>
+                            <div class="form-group">
+                                <label>Cost of Goods (KES)</label>
+                                <input type="number" id="saleCost" placeholder="0.00" min="0" step="0.01" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Quantity</label>
+                                <input type="number" id="saleQty" placeholder="1" min="1" value="1" />
+                            </div>
+                            <div class="form-group">
+                                <label>VAT / Tax (%)</label>
+                                <input type="number" id="saleTax" placeholder="0" min="0" max="100" value="0" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="saleCategory">
+                                <option value="Gift Sales">🎁 Gift Sales</option>
+                                <option value="Event Planning">🎉 Event Planning</option>
+                                <option value="Event Décor">🎊 Event Décor</option>
+                                <option value="Flower Arrangements">💐 Flower Arrangements</option>
+                                <option value="Cake Orders">🎂 Cake Orders</option>
+                                <option value="Balloons & Setups">🎈 Balloons & Setups</option>
+                                <option value="Photography">📸 Photography Add-ons</option>
+                                <option value="Other Income">📦 Other Income</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Method</label>
+                            <select id="salePayment">
+                                <option value="M-Pesa">📱 M-Pesa</option>
+                                <option value="Cash">💵 Cash</option>
+                                <option value="Bank Transfer">🏦 Bank Transfer</option>
+                                <option value="Card">💳 Card</option>
+                                <option value="Credit">📋 Credit / Pending</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Reference / Note (optional)</label>
+                            <input type="text" id="saleRef" placeholder="e.g. M-Pesa Ref: QB43G..." />
+                        </div>
+                        <div class="form-row" style="margin-top:10px">
+                            <button class="btn-secondary" onclick="openSmartEntry('income')">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Smart Entry
+                            </button>
+                            <button class="btn-primary" id="calcSaleBtn">
+                                <i class="fa-solid fa-calculator"></i> Preview
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div class="results-card card hidden" id="saleResults">
+                        <div class="results-title">📊 Sale Summary</div>
+                        <div class="result-grid">
+                            <div class="result-item">
+                                <span class="r-label">Gross Revenue</span>
+                                <span class="r-value green" id="rRevenue">—</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="r-label">Total Cost</span>
+                                <span class="r-value red" id="rCost">—</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="r-label">Tax Amount</span>
+                                <span class="r-value orange" id="rTax">—</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="r-label">Net Profit</span>
+                                <span class="r-value blue" id="rProfit">—</span>
+                            </div>
+                            <div class="result-item full">
+                                <span class="r-label">Profit Margin</span>
+                                <div class="margin-bar-wrap">
+                                    <div class="margin-bar-fill" id="rMarginBar"></div>
+                                </div>
+                                <span class="r-value big" id="rMargin">—</span>
+                            </div>
+                        </div>
+                        <div class="verdict-box" id="saleVerdict"></div>
+                        <button class="btn-primary" id="saveSaleBtn">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Transaction
+                        </button>
+                    </div>
+
+                    <!-- Margin Reference -->
+                    <div class="card ref-card">
+                        <div class="card-header">
+                            <h3>📐 Margin Calculator</h3>
+                        </div>
+                        <div class="margin-tool">
+                            <div class="form-row" style="padding:12px 16px 0">
+                                <div class="form-group">
+                                    <label>Sell Price</label>
+                                    <input type="number" id="mSellingPrice" placeholder="0.00" oninput="liveMargin()" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Cost Price</label>
+                                    <input type="number" id="mCostPrice" placeholder="0.00" oninput="liveMargin()" />
+                                </div>
+                            </div>
+                            <div id="liveMarginResult" class="live-margin hidden" style="padding:0 16px 14px">
+                                <div class="lm-row"><span>Gross Profit</span><strong id="lmGross">—</strong></div>
+                                <div class="lm-row"><span>Margin</span><strong id="lmMargin" class="lm-big">—</strong>
+                                </div>
+                                <div class="lm-row"><span>Markup</span><strong id="lmMarkup">—</strong></div>
+                                <div class="lm-verdict" id="lmVerdict"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Margin Benchmarks -->
+                    <div class="card ref-card">
+                        <div class="card-header">
+                            <h3>📈 Industry Benchmarks</h3>
+                        </div>
+                        <div class="bench-list">
+                            <div class="bench-item"><span>🔴 Poor</span><span>&lt; 10%</span></div>
+                            <div class="bench-item"><span>🟡 Fair</span><span>10–20%</span></div>
+                            <div class="bench-item"><span>🟢 Good</span><span>20–40%</span></div>
+                            <div class="bench-item"><span>💎 Excellent</span><span>&gt; 40%</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ EXPENSES PAGE ══════════════ -->
+            <section class="page" id="page-expenses">
+                <div class="page-scroll">
+                    <div class="page-hero hero-orange">
+                        <i class="fa-solid fa-wallet"></i>
+                        <h2>Expense Tracker</h2>
+                        <p>Monitor costs and control spending</p>
+                    </div>
+
+                    <div class="form-card card">
+                        <div class="form-group">
+                            <label>Expense Description</label>
+                            <input type="text" id="expName" placeholder="e.g. Fresh flower supplies" />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Amount (KES)</label>
+                                <input type="number" id="expAmount" placeholder="0.00" min="0" step="0.01" />
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="expCategory">
+                                    <option value="Flower Supplies">💐 Flower Supplies</option>
+                                    <option value="Gift Stock">🎁 Gift Stock</option>
+                                    <option value="Décor Materials">🎨 Décor Materials</option>
+                                    <option value="Rent & Venue">🏠 Rent & Venue</option>
+                                    <option value="Staff Salaries">👥 Staff Salaries</option>
+                                    <option value="Delivery & Transport">🚗 Delivery & Transport</option>
+                                    <option value="Marketing & Ads">📣 Marketing & Ads</option>
+                                    <option value="M-Pesa Charges">📱 M-Pesa Charges</option>
+                                    <option value="Utilities">💡 Utilities</option>
+                                    <option value="Packaging">🖨️ Printing & Packaging</option>
+                                    <option value="Other">📋 Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Payment Method</label>
+                                <select id="expPayment">
+                                    <option value="M-Pesa">📱 M-Pesa</option>
+                                    <option value="Cash">💵 Cash</option>
+                                    <option value="Bank Transfer">🏦 Bank Transfer</option>
+                                    <option value="Card">💳 Card</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Reference (optional)</label>
+                                <input type="text" id="expRef" placeholder="Receipt / Ref no." />
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-top:10px">
+                            <button class="btn-secondary" onclick="openSmartEntry('expense')">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Smart Entry
+                            </button>
+                            <button class="btn-primary" id="addExpenseBtn">
+                                <i class="fa-solid fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Budget Status -->
+                    <div class="card" id="expBudgetCard" style="display:none">
+                        <div class="card-header">
+                            <h3>📊 This Month's Budget Status</h3>
+                        </div>
+                        <div id="expBudgetList" style="padding:0 16px 14px"></div>
+                    </div>
+
+                    <!-- Expense Chart -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h3>Spending Breakdown</h3>
+                        </div>
+                        <canvas id="expenseChart" height="200"></canvas>
+                        <div class="exp-total">Total Expenses: <strong id="expTotal">KES 0</strong></div>
+                    </div>
+
+                    <!-- Expense History -->
+                    <div class="section-title">Expense History</div>
+                    <div id="expenseList" class="txn-list">
+                        <div class="empty-state"><i class="fa-solid fa-receipt"></i>
+                            <p>No expenses logged yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ REPORTS PAGE ══════════════ -->
+            <section class="page" id="page-reports">
+                <div class="page-scroll">
+                    <div class="page-hero hero-blue">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <h2>Financial Reports</h2>
+                        <p>Insights to drive smart decisions</p>
+                    </div>
+
+                    <!-- Report Tabs -->
+                    <div class="report-tabs card">
+                        <button class="rtab active" id="rtab-pl" onclick="setReportTab('pl')">P&amp;L</button>
+                        <button class="rtab" id="rtab-cashflow" onclick="setReportTab('cashflow')">Cash Flow</button>
+                        <button class="rtab" id="rtab-summary" onclick="setReportTab('summary')">Summary</button>
+                    </div>
+
+                    <!-- P&L Tab -->
+                    <div id="rtab-content-pl">
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <span class="kpi-icon" style="color:#10b981"><i class="fa-solid fa-arrow-up"></i></span>
+                                <span class="kpi-label">Gross Revenue</span>
+                                <span class="kpi-val" id="rptRevenue">KES 0</span>
+                            </div>
+                            <div class="kpi-card">
+                                <span class="kpi-icon" style="color:#ef4444"><i
+                                        class="fa-solid fa-arrow-down"></i></span>
+                                <span class="kpi-label">Total Costs</span>
+                                <span class="kpi-val" id="rptCosts">KES 0</span>
+                            </div>
+                            <div class="kpi-card">
+                                <span class="kpi-icon" style="color:#3b82f6"><i class="fa-solid fa-coins"></i></span>
+                                <span class="kpi-label">Net Profit</span>
+                                <span class="kpi-val" id="rptProfit">KES 0</span>
+                            </div>
+                            <div class="kpi-card">
+                                <span class="kpi-icon" style="color:#a855f7"><i class="fa-solid fa-percent"></i></span>
+                                <span class="kpi-label">Avg Margin</span>
+                                <span class="kpi-val" id="rptMargin">0%</span>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3>Profit & Loss Overview</h3>
+                            </div>
+                            <canvas id="plChart" height="200"></canvas>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3>Revenue by Category</h3>
+                            </div>
+                            <canvas id="catChart" height="200"></canvas>
+                        </div>
+                        <div class="section-title">Top Selling Products</div>
+                        <div id="topSellers" class="txn-list">
+                            <div class="empty-state"><i class="fa-solid fa-trophy"></i>
+                                <p>No data yet.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cash Flow Tab -->
+                    <div id="rtab-content-cashflow" class="hidden">
+                        <div class="cashflow-summary card">
+                            <div class="cf-row">
+                                <div class="cf-item">
+                                    <span class="cf-label">Money In (30 days)</span>
+                                    <span class="cf-val green" id="cfIn">KES 0</span>
+                                </div>
+                                <div class="cf-item">
+                                    <span class="cf-label">Money Out (30 days)</span>
+                                    <span class="cf-val red" id="cfOut">KES 0</span>
+                                </div>
+                            </div>
+                            <div class="cf-net">
+                                Net Cash Flow: <span id="cfNet" class="cf-net-val">KES 0</span>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h3>Income vs Expenses (Monthly)</h3>
+                            </div>
+                            <canvas id="cashflowChart" height="220"></canvas>
+                        </div>
+                        <div class="section-title">Running Balance</div>
+                        <div id="runningBalance" class="txn-list">
+                            <div class="empty-state"><i class="fa-solid fa-water"></i>
+                                <p>No data yet.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary Tab -->
+                    <div id="rtab-content-summary" class="hidden">
+                        <div class="section-title">Expense Category Summary</div>
+                        <div id="expCatSummary" class="txn-list"></div>
+                        <div class="section-title" style="margin-top:8px">Income Category Summary</div>
+                        <div id="incCatSummary" class="txn-list"></div>
+                        <div class="card chart-card" style="margin-top:14px">
+                            <div class="card-header">
+                                <h3>Expense Distribution</h3>
+                            </div>
+                            <canvas id="summaryExpChart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Export -->
+                    <div class="card export-card">
+                        <h3>📥 Export & Backup</h3>
+                        <p>Download your financial data for offline use or backup</p>
+                        <button class="btn-primary" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Download
+                            CSV</button>
+                        <button class="btn-secondary" onclick="backupJSON()"><i class="fa-solid fa-download"></i> Backup
+                            JSON</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ══════════════ MORE PAGE (Budget + Security + Settings) ══════════════ -->
+            <section class="page" id="page-more">
+                <div class="page-scroll">
+
+                    <!-- Budget Section -->
+                    <div class="section-title" style="margin-top:4px">📊 Monthly Budgets</div>
+                    <div class="card form-card">
+                        <p class="help-text">Set monthly spending limits per category. The app will alert you when you
+                            are close to or over budget.</p>
+                        <div id="budgetFormList"></div>
+                        <button class="btn-primary" onclick="saveBudgets()">
+                            <i class="fa-solid fa-save"></i> Save Budgets
+                        </button>
+                    </div>
+
+                    <!-- Budget Progress -->
+                    <div class="section-title">Current Month Spending vs Budget</div>
+                    <div id="budgetProgressList" class="card form-card"></div>
+
+                    <!-- Security Section -->
+                    <div class="section-title" style="margin-top:8px">🔐 Data Security</div>
+                    <div class="card form-card">
+                        <div id="pinStatus" class="pin-status-box"></div>
+                        <div id="pinSetupForm">
+                            <div class="form-group">
+                                <label id="pinSetupLabel">Set 4-Digit PIN</label>
+                                <input type="password" id="newPinInput" placeholder="Enter 4-digit PIN" maxlength="4"
+                                    inputmode="numeric" pattern="[0-9]*" />
+                            </div>
+                            <div class="form-group" id="pinConfirmWrap">
+                                <label>Confirm PIN</label>
+                                <input type="password" id="confirmPinInput" placeholder="Confirm PIN" maxlength="4"
+                                    inputmode="numeric" pattern="[0-9]*" />
+                            </div>
+                            <button class="btn-primary" onclick="setupPIN()">
+                                <i class="fa-solid fa-shield-halved"></i> <span id="pinBtnText">Enable PIN Lock</span>
+                            </button>
+                            <button class="btn-danger" id="removePinBtn" onclick="removePIN()"
+                                style="margin-top:8px;display:none">
+                                <i class="fa-solid fa-lock-open"></i> Remove PIN
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Business Settings -->
+                    <div class="section-title">⚙️ Business Settings</div>
+                    <div class="card form-card">
+                        <div class="form-group">
+                            <label>Business Name</label>
+                            <input type="text" id="settBusName" placeholder="e.g. Davma Surprises" />
+                        </div>
+                        <div class="form-group">
+                            <label>Business Type</label>
+                            <input type="text" id="settBusType" placeholder="e.g. Gift Shop & Event Décor" />
+                        </div>
+                        <div class="form-group">
+                            <label>Owner Name</label>
+                            <input type="text" id="settOwnerName" placeholder="Your name" />
+                        </div>
+                        <div class="form-group">
+                            <label>Currency</label>
+                            <select id="settCurrency">
+                                <option value="KES">KES – Kenyan Shilling</option>
+                                <option value="USD">USD – US Dollar</option>
+                                <option value="GBP">GBP – British Pound</option>
+                                <option value="EUR">EUR – Euro</option>
+                                <option value="NGN">NGN – Nigerian Naira</option>
+                                <option value="ZAR">ZAR – South African Rand</option>
+                                <option value="GHS">GHS – Ghanaian Cedi</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone / M-Pesa Till</label>
+                            <input type="text" id="settPhone" placeholder="e.g. +254111359933" />
+                        </div>
+                        <button class="btn-primary" onclick="saveSettings()">
+                            <i class="fa-solid fa-save"></i> Save Settings
+                        </button>
+                    </div>
+
+                    <!-- Backup & Restore -->
+                    <div class="section-title">💾 Backup & Restore</div>
+                    <div class="card form-card">
+                        <p class="help-text">Keep backups of your financial data to prevent data loss. Restore from a
+                            previous backup anytime.</p>
+                        <div class="backup-btns">
+                            <button class="btn-primary" onclick="backupJSON()">
+                                <i class="fa-solid fa-cloud-arrow-down"></i> Download Backup
+                            </button>
+                            <label class="btn-secondary restore-btn">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Restore from Backup
+                                <input type="file" id="restoreFile" accept=".json" onchange="restoreBackup(event)"
+                                    style="display:none" />
+                            </label>
+                        </div>
+                        <div class="form-group" style="margin-top:14px">
+                            <label>Last Backup</label>
+                            <div class="info-box" id="lastBackupInfo">No backup created yet</div>
+                        </div>
+                    </div>
+
+                    <!-- Demo Data -->
+                    <div class="section-title">🧪 Demo Data</div>
+                    <div class="card form-card">
+                        <p class="help-text">Load sample data for Davma Surprises & Event Décor to see the app in
+                            action.</p>
+                        <button class="btn-secondary" onclick="loadDemoData()">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Load Davma Demo Data
+                        </button>
+                        <button class="btn-danger" onclick="clearAllData()" style="margin-top:10px">
+                            <i class="fa-solid fa-trash"></i> Clear All Data
+                        </button>
+                    </div>
+
+                </div>
+            </section>
+
+        </main><!-- /app-main -->
+
+        <!-- Bottom Nav -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" id="nav-dashboard" onclick="goTo('dashboard')">
+                <i class="fa-solid fa-house"></i><span>Home</span>
+            </button>
+            <button class="nav-item" id="nav-income" onclick="goTo('income')">
+                <i class="fa-solid fa-arrow-trend-up"></i><span>Income</span>
+            </button>
+            <button class="nav-item" id="nav-expenses" onclick="goTo('expenses')">
+                <i class="fa-solid fa-wallet"></i><span>Expenses</span>
+            </button>
+            <button class="nav-item" id="nav-reports" onclick="goTo('reports')">
+                <i class="fa-solid fa-chart-pie"></i><span>Reports</span>
+            </button>
+            <button class="nav-item" id="nav-more" onclick="goTo('more')">
+                <i class="fa-solid fa-sliders"></i><span>More</span>
+            </button>
+        </nav>
+
+    </div><!-- /app -->
+
+    <!-- Toast -->
+    <div class="toast hidden" id="toast">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toastMsg"></span>
+    </div>
+
+    <script src="app.js"></script>
+
+    <!-- ──────────────── SMART ENTRY MODAL ──────────────── -->
+    <div id="smartModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="smartModalTitle">Smart Entry</h3>
+                <button class="close-btn" onclick="closeSmartEntry()"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="smart-tabs">
+                    <button class="stab active" id="stab-sms" onclick="setSmartTab('sms')"><i
+                            class="fa-solid fa-message"></i> SMS</button>
+                    <button class="stab" id="stab-scan" onclick="setSmartTab('scan')"><i class="fa-solid fa-camera"></i>
+                        Scan</button>
+                    <button class="stab" id="stab-csv" onclick="setSmartTab('csv')"><i class="fa-solid fa-file-csv"></i>
+                        CSV</button>
+                </div>
+
+                <!-- SMS Tab -->
+                <div id="smart-sms-tab">
+                    <p class="help-text">Paste an M-Pesa or Bank SMS here. We will extract the amount, name, and date.
+                    </p>
+                    <textarea id="smsInput" placeholder="Paste SMS here..." rows="4" class="smart-textarea"></textarea>
+                    <button class="btn-primary" style="margin-top:10px" onclick="parseSMS()">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> Extract Data
+                    </button>
+                </div>
+
+                <!-- Scan Tab -->
+                <div id="smart-scan-tab" class="hidden">
+                    <p class="help-text">Take a photo of your receipt to extract details automatically.</p>
+                    <div class="scanner-wrap">
+                        <div id="scanStatus" class="scan-status">Waiting for image...</div>
+                        <img id="scanPreview" class="scan-preview hidden" />
+                        <label class="btn-secondary">
+                            <i class="fa-solid fa-camera"></i> Scan Receipt
+                            <input type="file" id="scanFile" accept="image/*" capture="environment"
+                                onchange="runOCR(event)" style="display:none" />
+                        </label>
+                    </div>
+                </div>
+
+                <!-- CSV Tab -->
+                <div id="smart-csv-tab" class="hidden">
+                    <p class="help-text">Import bulk transactions from a CSV file.</p>
+                    <label class="btn-secondary">
+                        <i class="fa-solid fa-file-import"></i> Choose CSV
+                        <input type="file" id="csvFile" accept=".csv" onchange="importCSV(event)"
+                            style="display:none" />
+                    </label>
+                    <div id="csvPreview" class="csv-preview hidden">
+                        <div id="csvCount" style="font-size:12px;margin:10px 0;font-weight:600"></div>
+                        <button class="btn-primary" onclick="confirmCSVImport()">Import Everything</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
